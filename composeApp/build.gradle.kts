@@ -34,6 +34,7 @@ kotlin {
             implementation(libs.androidx.activity.compose)
         }
         commonMain.dependencies {
+            implementation(project(":svg"))
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material3)

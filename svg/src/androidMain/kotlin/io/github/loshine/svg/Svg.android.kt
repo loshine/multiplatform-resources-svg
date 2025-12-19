@@ -115,7 +115,7 @@ actual fun rememberSvgPainter(resource: DrawableResource): Painter {
             val cached =
                 withContext(Dispatchers.Default) {
                     imageCache.getOrLoad(path) {
-                        SvgCache(BitmapPainter(buildSvgImageBitmap(path)))
+                        SvgCache(BitmapPainter(buildSvgImageBitmap(path, density.density)))
                     }
                 }
             cached.painter
@@ -167,15 +167,17 @@ private fun ByteArray.toPath(): String = String(this)
  * @param path The SVG content as a string
  * @return An [ImageBitmap] containing the rendered SVG
  */
-private fun buildSvgImageBitmap(path: String): ImageBitmap {
+private fun buildSvgImageBitmap(path: String, density: Float): ImageBitmap {
     val svg = SVG.getFromString(path)
     val viewBox = svg.documentViewBox
-    val imageSize =
-        if (viewBox != null) {
-            Size(viewBox.width(), viewBox.height())
-        } else {
-            Size(svg.documentWidth, svg.documentHeight)
-        }
+    //    val imageSize =
+    //        if (viewBox != null) {
+    //            Size(viewBox.width() * density, viewBox.height() * density)
+    //        } else {
+    //            Size(svg.documentWidth * density, svg.documentHeight * density)
+    //        }
+    val imageSize = Size(svg.documentWidth * density, svg.documentHeight * density)
+    println("imageSize: ${svg.documentWidth}, ${svg.documentHeight}")
 
     if (viewBox == null && !imageSize.isEmpty()) {
         svg.setDocumentViewBox(0f, 0f, imageSize.width, imageSize.height)
