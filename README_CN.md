@@ -23,7 +23,8 @@
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation("io.github.loshine.svg:svg:{latest_version}") // 请替换为最新版本
+            // 请替换为最新版本
+            implementation("io.github.loshine:multiplatform-resources-svg:{latest_version}")
         }
     }
 }

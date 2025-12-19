@@ -1,4 +1,4 @@
-package io.github.loshine.svg
+package io.github.loshine.mrsvg
 
 import android.graphics.Canvas
 import android.os.Build
@@ -43,7 +43,7 @@ private val imageCache = AsyncCache<String, SvgCache>()
 /**
  * Cache wrapper for SVG painters.
  *
- * @property painter The cached [Painter] instance
+ * @property painter The cached [androidx.compose.ui.graphics.painter.Painter] instance
  */
 private class SvgCache(val painter: Painter)
 
@@ -94,7 +94,7 @@ internal class AsyncCache<K, V> {
 }
 
 /**
- * Android implementation of [rememberSvgPainter].
+ * Android implementation of [io.github.loshine.mrsvg.rememberSvgPainter].
  *
  * Uses AndroidSVG library to parse and render SVG resources. The implementation:
  * - Loads SVG bytes from the drawable resource
@@ -130,7 +130,7 @@ actual fun rememberSvgPainter(resource: DrawableResource): Painter {
  * @param key2 Second key for remembering state
  * @param getDefault Function that provides a default value while loading
  * @param block Suspending function that loads the actual value
- * @return A [State] containing the loaded value
+ * @return A [androidx.compose.runtime.State] containing the loaded value
  */
 @Composable
 private fun <T> rememberResourceState(
@@ -156,7 +156,7 @@ private fun <T> rememberResourceState(
 private fun ByteArray.toPath(): String = String(this)
 
 /**
- * Builds an [ImageBitmap] from SVG content.
+ * Builds an [androidx.compose.ui.graphics.ImageBitmap] from SVG content.
  *
  * This function:
  * - Parses the SVG string using AndroidSVG
@@ -165,7 +165,7 @@ private fun ByteArray.toPath(): String = String(this)
  * - Renders the SVG to the bitmap canvas
  *
  * @param path The SVG content as a string
- * @return An [ImageBitmap] containing the rendered SVG
+ * @return An [androidx.compose.ui.graphics.ImageBitmap] containing the rendered SVG
  */
 private fun buildSvgImageBitmap(path: String, density: Float): ImageBitmap {
     val svg = SVG.getFromString(path)

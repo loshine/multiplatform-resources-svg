@@ -23,7 +23,8 @@ Add the dependency to your `build.gradle.kts` (commonMain):
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation("io.github.loshine.svg:svg:{latest_version}") // Replace with latest version
+            // Replace with latest version
+            implementation("io.github.loshine:multiplatform-resources-svg:{latest_version}")
         }
     }
 }

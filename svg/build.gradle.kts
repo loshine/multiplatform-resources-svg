@@ -13,7 +13,7 @@ plugins {
 
 kotlin {
     androidLibrary {
-        namespace = "io.github.loshine.svg"
+        namespace = "io.github.loshine.svg.mrsvg"
         compileSdk = libs.versions.android.compileSdk.get().toInt()
 
         packaging { resources { excludes += "/META-INF/{AL2.0,LGPL2.1}" } }
