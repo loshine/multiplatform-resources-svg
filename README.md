@@ -44,6 +44,30 @@ fun MyIcon() {
 }
 ```
 
+### SvgImage
+
+Alternatively, you can use the `SvgImage` composable directly, which wraps `Image` and `rememberSvgPainter` for convenience:
+
+```kotlin
+import androidx.compose.foundation.layout.size
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import io.github.loshine.svg.SvgImage
+import kotlinproject.composeapp.generated.resources.Res
+import kotlinproject.composeapp.generated.resources.my_icon
+
+@Composable
+fun MyIcon() {
+    SvgImage(
+        resource = Res.drawable.my_icon,
+        contentDescription = "My Icon",
+        // Optional: Apply modifiers, scaling, etc.
+        modifier = Modifier.size(24.dp)
+    )
+}
+```
+
 ## Supported Targets
 
 - **Android**

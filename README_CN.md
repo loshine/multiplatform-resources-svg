@@ -44,6 +44,30 @@ fun MyIcon() {
 }
 ```
 
+### SvgImage
+
+或者，您可以直接使用 `SvgImage` composable，它封装了 `Image` 和 `rememberSvgPainter`，更加方便：
+
+```kotlin
+import androidx.compose.foundation.layout.size
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import io.github.loshine.svg.SvgImage
+import kotlinproject.composeapp.generated.resources.Res
+import kotlinproject.composeapp.generated.resources.my_icon
+
+@Composable
+fun MyIcon() {
+    SvgImage(
+        resource = Res.drawable.my_icon,
+        contentDescription = "我的图标",
+        // 可选：应用修饰符、缩放等
+        modifier = Modifier.size(24.dp)
+    )
+}
+```
+
 ## 支持的平台
 
 - **Android**

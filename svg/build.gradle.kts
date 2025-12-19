@@ -1,3 +1,8 @@
+@file:OptIn(ExperimentalKotlinGradlePluginApi::class, ExperimentalWasmDsl::class)
+
+import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
+import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
+
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.kotlinMultiplatformAndroidLibrary)
@@ -19,8 +24,8 @@ kotlin {
 
     jvm()
 
-    js()
-    wasmJs()
+    js { browser() }
+    wasmJs { browser() }
 
     applyDefaultHierarchyTemplate {
         group("nonAndroid") {
@@ -38,11 +43,13 @@ kotlin {
         }
         val commonMain by getting {
             dependencies {
+                implementation(compose.foundation)
                 implementation(compose.ui)
                 implementation(compose.components.resources)
             }
         }
-        commonTest.dependencies { implementation(libs.kotlin.test) }
+        val commonTest by getting { dependencies { implementation(libs.kotlin.test) } }
         val nonAndroidMain by getting { dependsOn(commonMain) }
+        val nonAndroidTest by getting { dependsOn(commonTest) }
     }
 }
