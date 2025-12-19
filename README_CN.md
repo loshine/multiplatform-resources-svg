@@ -1,5 +1,10 @@
 # Multiplatform Resources SVG
 
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.loshine/multiplatform-resources-svg.svg)](https://central.sonatype.com/artifact/io.github.loshine/multiplatform-resources-svg)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)
+[![Kotlin](https://img.shields.io/badge/kotlin-2.2.21-blue.svg?logo=kotlin)](http://kotlinlang.org)
+[![Kotlin Multiplatform](https://img.shields.io/badge/Kotlin-Multiplatform-blueviolet?logo=kotlin)](https://kotlinlang.org/docs/multiplatform.html)
+
 [English](./README.md)
 
 一个 Kotlin Multiplatform 库，为 SVG 资源渲染提供统一的 API，并针对特定平台进行了优化。
@@ -76,6 +81,12 @@ fun MyIcon() {
 - **JS**
 - **Wasm (JS)**
 
+## 致谢
+
+感谢以下优秀的开源项目，为本库提供了核心支持：
+
+- [AndroidSVG](https://bigbadaboom.github.io/androidsvg/): 为 Android 平台提供了强大的 SVG 渲染能力。
+
 ## 许可证
 
-[MIT License](LICENSE)
+[Apache License 2.0](LICENSE)

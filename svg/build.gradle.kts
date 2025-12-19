@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.kotlinMultiplatformAndroidLibrary)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.mavenPublish)
 }
 
 kotlin {
@@ -51,5 +52,41 @@ kotlin {
         val commonTest by getting { dependencies { implementation(libs.kotlin.test) } }
         val nonAndroidMain by getting { dependsOn(commonMain) }
         val nonAndroidTest by getting { dependsOn(commonTest) }
+    }
+}
+
+mavenPublishing {
+    publishToMavenCentral()
+
+    signAllPublications()
+
+    coordinates("io.github.loshine", "multiplatform-resources-svg", "0.0.1")
+
+    pom {
+        name.set("multiplatform-resources-svg")
+        description.set("Provides a unified SVG loading API for Kotlin Multiplatform Resources.")
+        inceptionYear.set("2020")
+        url.set("https://github.com/loshine/multiplatform-resources-svg")
+        licenses {
+            license {
+                name.set("The Apache License, Version 2.0")
+                url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
+                distribution.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
+            }
+        }
+        developers {
+            developer {
+                id.set("loshine")
+                name.set("Loshine")
+                url.set("https://github.com/loshine/")
+            }
+        }
+        scm {
+            url.set("https://github.com/loshine/multiplatform-resources-svg/")
+            connection.set("scm:git:git@github.com:loshine/multiplatform-resources-svg.git")
+            developerConnection.set(
+                "scm:git:git@github.com:loshine/multiplatform-resources-svg.git"
+            )
+        }
     }
 }

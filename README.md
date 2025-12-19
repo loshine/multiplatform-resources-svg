@@ -1,5 +1,10 @@
 # Multiplatform Resources SVG
 
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.loshine/multiplatform-resources-svg.svg)](https://central.sonatype.com/artifact/io.github.loshine/multiplatform-resources-svg)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)
+[![Kotlin](https://img.shields.io/badge/kotlin-2.2.21-blue.svg?logo=kotlin)](http://kotlinlang.org)
+[![Kotlin Multiplatform](https://img.shields.io/badge/Kotlin-Multiplatform-blueviolet?logo=kotlin)](https://kotlinlang.org/docs/multiplatform.html)
+
 [中文](./README_CN.md)
 
 A Kotlin Multiplatform library that provides a unified API for rendering SVG resources, with platform-specific optimizations.
@@ -76,6 +81,12 @@ fun MyIcon() {
 - **JS**
 - **Wasm (JS)**
 
+## Acknowledgments
+
+This library wouldn't be possible without the following amazing open-source project:
+
+- [AndroidSVG](https://bigbadaboom.github.io/androidsvg/): A powerful SVG rendering library for Android.
+
 ## License
 
-[MIT License](LICENSE)
+[Apache License 2.0](LICENSE)
