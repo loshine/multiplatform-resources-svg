@@ -12,16 +12,16 @@ plugins {
 }
 
 kotlin {
-    androidLibrary {
+    android {
         namespace = "io.github.loshine.svg.mrsvg"
         compileSdk = libs.versions.android.compileSdk.get().toInt()
+        minSdk = libs.versions.android.minSdk.get().toInt()
 
         packaging { resources { excludes += "/META-INF/{AL2.0,LGPL2.1}" } }
     }
 
     iosArm64()
     iosSimulatorArm64()
-    iosX64()
 
     jvm()
 
@@ -29,11 +29,13 @@ kotlin {
     wasmJs { browser() }
 
     applyDefaultHierarchyTemplate {
-        group("nonAndroid") {
-            withIos()
-            withJvm()
-            withJs()
-            withWasmJs()
+        common {
+            group("nonAndroid") {
+                withIos()
+                withJvm()
+                withJs()
+                withWasmJs()
+            }
         }
     }
 
@@ -42,25 +44,25 @@ kotlin {
             implementation(libs.android.svg)
             implementation(libs.androidx.core.ktx)
         }
-        val commonMain by getting {
-            dependencies {
-                implementation(compose.foundation)
-                implementation(compose.ui)
-                implementation(compose.components.resources)
-            }
+        commonMain.dependencies {
+            implementation(libs.compose.foundation)
+            implementation(libs.compose.ui)
+            implementation(libs.compose.components.resources)
         }
-        val commonTest by getting { dependencies { implementation(libs.kotlin.test) } }
-        val nonAndroidMain by getting { dependsOn(commonMain) }
-        val nonAndroidTest by getting { dependsOn(commonTest) }
+        commonTest.dependencies {
+            implementation(libs.kotlin.test)
+        }
     }
 }
 
 mavenPublishing {
-    publishToMavenCentral()
+    publishToMavenCentral(automaticRelease = true)
 
-    signAllPublications()
+    if (!providers.gradleProperty("skipSigning").map(String::toBoolean).getOrElse(false)) {
+        signAllPublications()
+    }
 
-    coordinates("io.github.loshine", "multiplatform-resources-svg", "0.0.1")
+    coordinates("io.github.loshine", "multiplatform-resources-svg", version.toString())
 
     pom {
         name.set("multiplatform-resources-svg")
