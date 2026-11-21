@@ -20,7 +20,7 @@ import androidx.compose.ui.Modifier
 import io.github.loshine.mrsvg.rememberSvgPainter
 import kotlinproject.composeapp.generated.resources.Res
 import kotlinproject.composeapp.generated.resources.compose_multiplatform
-import org.jetbrains.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.Preview
 
 @Composable
 @Preview
