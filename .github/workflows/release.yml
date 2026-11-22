@@ -10,8 +10,13 @@ on:
         description: 'Release version override (defaults to version in gradle.properties)'
         required: false
         type: string
+      publish_maven_central:
+        description: 'Publish artifacts to Maven Central (requires Maven Central & GPG secrets)'
+        required: false
+        default: false
+        type: boolean
       create_github_release:
-        description: 'Create a GitHub Release after publishing to Maven Central'
+        description: 'Create a GitHub Release'
         required: false
         default: true
         type: boolean
@@ -24,18 +29,26 @@ permissions:
   contents: write
 
 jobs:
-  release:
-    name: Publish to Maven Central & Create Release
-    runs-on: macos-latest
+  prepare:
+    name: Resolve Version & Release Plan
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.plan.outputs.version }}
+      tag: ${{ steps.plan.outputs.tag }}
+      prerelease: ${{ steps.plan.outputs.prerelease }}
+      should_publish_maven_central: ${{ steps.plan.outputs.should_publish_maven_central }}
+      should_create_release: ${{ steps.plan.outputs.should_create_release }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Resolve and validate release version
-        id: version
+      - name: Resolve version and release plan
+        id: plan
         shell: bash
+        env:
+          MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          SIGNING_IN_MEMORY_KEY: ${{ secrets.SIGNING_IN_MEMORY_KEY }}
         run: |
           set -euo pipefail
           PROP_VERSION="$(grep -E '^version=' gradle.properties | head -n 1 | cut -d'=' -f2- | tr -d '[:space:]')"
@@ -43,6 +56,11 @@ jobs:
             echo "::error::Could not find 'version=' in gradle.properties."
             exit 1
           fi
+
+          missing=()
+          [ -z "${MAVEN_CENTRAL_USERNAME:-}" ] && missing+=("MAVEN_CENTRAL_USERNAME")
+          [ -z "${MAVEN_CENTRAL_PASSWORD:-}" ] && missing+=("MAVEN_CENTRAL_PASSWORD")
+          [ -z "${SIGNING_IN_MEMORY_KEY:-}" ] && missing+=("SIGNING_IN_MEMORY_KEY")
 
           if [ "${GITHUB_EVENT_NAME}" = "push" ]; then
             TAG_NAME="${GITHUB_REF_NAME}"
@@ -52,11 +70,26 @@ jobs:
               exit 1
             fi
             SHOULD_CREATE_RELEASE="true"
+            if [ "${#missing[@]}" -eq 0 ]; then
+              SHOULD_PUBLISH_MAVEN_CENTRAL="true"
+            else
+              SHOULD_PUBLISH_MAVEN_CENTRAL="false"
+              echo "::notice::Maven Central secrets not configured (${missing[*]}). Skipping Maven Central publication and creating GitHub Release only."
+            fi
           else
             INPUT_VERSION="${{ inputs.version }}"
             RELEASE_VERSION="${INPUT_VERSION:-$PROP_VERSION}"
             TAG_NAME="v${RELEASE_VERSION}"
             SHOULD_CREATE_RELEASE="${{ inputs.create_github_release }}"
+            if [ "${{ inputs.publish_maven_central }}" = "true" ]; then
+              if [ "${#missing[@]}" -gt 0 ]; then
+                echo "::error::publish_maven_central was enabled, but required secrets are missing: ${missing[*]}"
+                exit 1
+              fi
+              SHOULD_PUBLISH_MAVEN_CENTRAL="true"
+            else
+              SHOULD_PUBLISH_MAVEN_CENTRAL="false"
+            fi
           fi
 
           if [[ "$RELEASE_VERSION" == *-* ]]; then
@@ -68,25 +101,20 @@ jobs:
           echo "version=${RELEASE_VERSION}" >> "$GITHUB_OUTPUT"
           echo "tag=${TAG_NAME}" >> "$GITHUB_OUTPUT"
           echo "prerelease=${PRERELEASE}" >> "$GITHUB_OUTPUT"
+          echo "should_publish_maven_central=${SHOULD_PUBLISH_MAVEN_CENTRAL}" >> "$GITHUB_OUTPUT"
           echo "should_create_release=${SHOULD_CREATE_RELEASE}" >> "$GITHUB_OUTPUT"
-          echo "Releasing version ${RELEASE_VERSION} (tag: ${TAG_NAME}, prerelease: ${PRERELEASE})"
+          echo "Release plan: version=${RELEASE_VERSION}, tag=${TAG_NAME}, prerelease=${PRERELEASE}, publish_maven_central=${SHOULD_PUBLISH_MAVEN_CENTRAL}, create_github_release=${SHOULD_CREATE_RELEASE}"
 
-      - name: Validate publishing secrets
-        shell: bash
-        env:
-          MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
-          MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
-          SIGNING_IN_MEMORY_KEY: ${{ secrets.SIGNING_IN_MEMORY_KEY }}
-        run: |
-          set -euo pipefail
-          missing=()
-          [ -z "${MAVEN_CENTRAL_USERNAME:-}" ] && missing+=("MAVEN_CENTRAL_USERNAME")
-          [ -z "${MAVEN_CENTRAL_PASSWORD:-}" ] && missing+=("MAVEN_CENTRAL_PASSWORD")
-          [ -z "${SIGNING_IN_MEMORY_KEY:-}" ] && missing+=("SIGNING_IN_MEMORY_KEY")
-          if [ "${#missing[@]}" -gt 0 ]; then
-            echo "::error::Missing required GitHub Actions secrets: ${missing[*]}"
-            exit 1
-          fi
+  publish-maven-central:
+    name: Publish to Maven Central
+    needs: prepare
+    if: needs.prepare.outputs.should_publish_maven_central == 'true'
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -119,7 +147,7 @@ jobs:
       - name: Publish to Maven Central
         run: |
           ./gradlew :svg:publishAndReleaseToMavenCentral \
-            -Pversion="${{ steps.version.outputs.version }}" \
+            -Pversion="${{ needs.prepare.outputs.version }}" \
             --no-configuration-cache
         env:
           ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
@@ -128,12 +156,22 @@ jobs:
           ORG_GRADLE_PROJECT_signingInMemoryKeyId: ${{ secrets.SIGNING_IN_MEMORY_KEY_ID }}
           ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_IN_MEMORY_KEY_PASSWORD }}
 
+  github-release:
+    name: Create GitHub Release
+    needs: [prepare, publish-maven-central]
+    if: ${{ always() && needs.prepare.result == 'success' && (needs.publish-maven-central.result == 'success' || needs.publish-maven-central.result == 'skipped') && needs.prepare.outputs.should_create_release == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: Create GitHub Release
-        if: steps.version.outputs.should_create_release == 'true'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.version.outputs.tag }}
-          name: ${{ steps.version.outputs.tag }}
+          tag_name: ${{ needs.prepare.outputs.tag }}
+          name: ${{ needs.prepare.outputs.tag }}
           target_commitish: ${{ github.sha }}
           generate_release_notes: true
-          prerelease: ${{ steps.version.outputs.prerelease == 'true' }}
+          prerelease: ${{ needs.prepare.outputs.prerelease == 'true' }}
