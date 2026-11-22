@@ -1,5 +1,8 @@
 package io.github.loshine.mrsvg
 
+import android.os.Looper
+import android.view.View
+import androidx.activity.ComponentActivity
 import androidx.compose.runtime.AbstractApplier
 import androidx.compose.runtime.Composition
 import androidx.compose.runtime.CompositionLocalProvider
@@ -9,17 +12,23 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.Snapshot
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.IntSize
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotSame
+import kotlin.test.assertNull
+import kotlin.test.assertSame
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -29,10 +38,14 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.InternalResourceApi
+import org.jetbrains.compose.resources.ResourceEnvironment
 import org.jetbrains.compose.resources.ResourceItem
+import org.jetbrains.compose.resources.rememberResourceEnvironment
 import org.junit.runner.RunWith
+import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import org.robolectric.Shadows
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
@@ -54,7 +67,83 @@ class SvgCompositionTest {
 
     @OptIn(InternalResourceApi::class)
     @Test
-    fun missingResourceFallsBackToOneByOnePlaceholderPainter() = runBlocking {
+    fun svgImageSwitchesCrossModuleResourcesWithIdenticalIdAtSameCallSite() = runBlocking {
+        svgDocumentCache.clear()
+        val controller = Robolectric.buildActivity(ComponentActivity::class.java).setup()
+        try {
+            val activity = controller.get()
+            val moduleAResource =
+                DrawableResource(
+                    id = "drawable:icon",
+                    items =
+                        setOf(
+                            ResourceItem(
+                                emptySet(),
+                                "composeResources/test_module_a/drawable/icon.svg",
+                                -1,
+                                -1,
+                            ),
+                        ),
+                )
+            val moduleBResource =
+                DrawableResource(
+                    id = "drawable:icon",
+                    items =
+                        setOf(
+                            ResourceItem(
+                                emptySet(),
+                                "composeResources/test_module_b/drawable/icon.svg",
+                                -1,
+                                -1,
+                            ),
+                        ),
+                )
+            assertEquals(moduleAResource, moduleBResource)
+
+            var useModuleB by mutableStateOf(false)
+            val measuredSize = AtomicReference(IntSize.Zero)
+
+            val composeView =
+                ComposeView(activity).apply {
+                    setContent {
+                        CompositionLocalProvider(LocalDensity provides Density(1f)) {
+                            val resource = if (useModuleB) moduleBResource else moduleAResource
+                            SvgImage(
+                                resource = resource,
+                                contentDescription = "icon",
+                                modifier = Modifier.onSizeChanged { measuredSize.set(it) },
+                            )
+                        }
+                    }
+                }
+            activity.setContentView(composeView)
+
+            awaitMeasuredSize(composeView, IntSize(20, 20)) { measuredSize.get() }
+
+            // Switch at the exact same SvgImage call site; @NonRestartableComposable ensures
+            // Compose does not skip recomposition based on DrawableResource.equals (id only).
+            useModuleB = true
+            Snapshot.sendApplyNotifications()
+
+            awaitMeasuredSize(composeView, IntSize(30, 30)) { measuredSize.get() }
+        } finally {
+            controller.pause().stop().destroy()
+            svgDocumentCache.clear()
+        }
+    }
+
+    @Test
+    fun missingResourceFallsBackToOneByOnePlaceholderInPreviewMode() {
+        verifyMissingResourceFallback(isInspectionMode = true)
+    }
+
+    @Test
+    fun missingResourceFallsBackToOneByOnePlaceholderInRuntimeMode() {
+        verifyMissingResourceFallback(isInspectionMode = false)
+    }
+
+    @OptIn(InternalResourceApi::class)
+    private fun verifyMissingResourceFallback(isInspectionMode: Boolean) = runBlocking {
         svgDocumentCache.clear()
         try {
             val missingResource =
@@ -77,7 +166,8 @@ class SvgCompositionTest {
                 }
             val recomposer = Recomposer(coroutineContext + frameClock)
             val recomposerJob = launch(frameClock) { recomposer.runRecomposeAndApplyChanges() }
-            var observed: Painter? = null
+            val observed = AtomicReference<Painter?>(null)
+            val capturedEnv = AtomicReference<ResourceEnvironment?>(null)
 
             val composition = Composition(NoOpApplier, recomposer)
             try {
@@ -86,12 +176,23 @@ class SvgCompositionTest {
                         LocalContext provides app,
                         LocalConfiguration provides app.resources.configuration,
                         LocalDensity provides Density(1f),
-                        LocalInspectionMode provides true,
+                        LocalInspectionMode provides isInspectionMode,
                     ) {
-                        observed = rememberSvgPainter(missingResource)
+                        capturedEnv.set(rememberResourceEnvironment())
+                        observed.set(rememberSvgPainter(missingResource))
                     }
                 }
-                assertEquals(Size(1f, 1f), observed?.intrinsicSize)
+                if (!isInspectionMode) {
+                    // Allow LaunchedEffect on IO/Default dispatchers to attempt and handle failure.
+                    repeat(5) {
+                        Snapshot.sendApplyNotifications()
+                        withContext(Dispatchers.Default) { delay(20L) }
+                    }
+                }
+                assertSame(EmptySvgPainter, observed.get())
+                assertEquals(Size(1f, 1f), observed.get()?.intrinsicSize)
+                val env = capturedEnv.get()!!
+                assertNull(svgDocumentCache.getIfPresent(ResourceIdentityKey(missingResource, env)))
             } finally {
                 composition.dispose()
                 recomposer.cancel()
@@ -176,6 +277,25 @@ class SvgCompositionTest {
             svgDocumentCache.clear()
         }
     }
+
+    private suspend fun awaitMeasuredSize(
+        view: View,
+        expected: IntSize,
+        provider: () -> IntSize,
+    ) =
+        withTimeout(5_000L) {
+            val wrapSpec = View.MeasureSpec.makeMeasureSpec(500, View.MeasureSpec.AT_MOST)
+            while (true) {
+                Snapshot.sendApplyNotifications()
+                Shadows.shadowOf(Looper.getMainLooper()).idle()
+                view.measure(wrapSpec, wrapSpec)
+                view.layout(0, 0, view.measuredWidth, view.measuredHeight)
+                if (provider() == expected) {
+                    return@withTimeout
+                }
+                withContext(Dispatchers.Default) { delay(10L) }
+            }
+        }
 
     private suspend fun awaitPainterWithIntrinsicSize(
         expected: Size,
