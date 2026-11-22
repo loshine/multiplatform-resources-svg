@@ -7,5 +7,6 @@ plugins {
     alias(libs.plugins.composeCompiler) apply false
     alias(libs.plugins.kotlinMultiplatform) apply false
     alias(libs.plugins.kotlinMultiplatformAndroidLibrary) apply false
+    alias(libs.plugins.ktfmt) apply false
     alias(libs.plugins.mavenPublish) apply false
 }

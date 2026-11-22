@@ -2,7 +2,6 @@
 
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.loshine/multiplatform-resources-svg.svg)](https://central.sonatype.com/artifact/io.github.loshine/multiplatform-resources-svg)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)
-[![Kotlin](https://img.shields.io/badge/kotlin-2.4.21-blue.svg?logo=kotlin)](http://kotlinlang.org)
 [![Kotlin Multiplatform](https://img.shields.io/badge/Kotlin-Multiplatform-blueviolet?logo=kotlin)](https://kotlinlang.org/docs/multiplatform.html)
 
 [中文](./README_CN.md)
@@ -11,7 +10,7 @@ A Kotlin Multiplatform library that provides a unified API for rendering SVG res
 
 ## Features
 
-- **Android**: Leverages the [AndroidSVG](https://bigbadaboom.github.io/androidsvg/) library for robust SVG rendering and implements an asynchronous cache to improve performance.
+- **Android**: Leverages [AndroidSVG](https://bigbadaboom.github.io/androidsvg/) with an on-demand rasterizing `Painter` aligned with Compose Multiplatform's Skiko `SvgPainter`, a bounded LRU document cache, and Android Studio Preview support.
 - **Other Platforms (iOS, JVM, JS, Wasm)**: Utilizes the standard [Compose Multiplatform](https://www.jetbrains.com/lp/compose-multiplatform/) `painterResource` for seamless integration.
 - **Unified API**: Exposes a simple `rememberSvgPainter` Composable that works across all supported targets.
 
@@ -81,6 +80,12 @@ fun MyIcon() {
 - **JVM (Desktop)**
 - **JS**
 - **Wasm (JS)**
+
+## Notes & Limitations
+
+- **Simple icons**: For simple monochrome or flat UI icons, prefer Android Vector Drawable (`.xml`) with Compose Multiplatform's built-in `painterResource`—it renders natively as Compose `ImageVector` across all platforms with zero extra runtime dependencies.
+- **Cross-platform engine differences**: Android renders SVGs with **AndroidSVG 1.4** (SVG 1.1 subset; `<filter>` elements are not supported), while non-Android targets render with **Skia** (`SVGDOM`). Android preserves the SVG's declared or default `preserveAspectRatio` (`xMidYMid meet`) per SVG 1.1, whereas Skia's `SvgPainter` forces `none`. Advanced SVG 2 features or subtle CSS/text layout details may also differ between Android and Skia targets.
+- **Android bitmap cap**: To prevent `OutOfMemoryError` and GPU texture limit crashes on extreme draw sizes, each Android painter caps its own ARGB_8888 backing bitmap at 4096 px per edge and ~16 MiB total pixels, downsampling proportionally via canvas scale when exceeded (multiple active painters and reallocation spikes still accumulate).
 
 ## Acknowledgments
 
