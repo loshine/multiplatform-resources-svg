@@ -30,6 +30,7 @@ kotlin {
         iosTarget.binaries.framework {
             baseName = "ComposeApp"
             isStatic = true
+            freeCompilerArgs += "-Xbinary=bundleId=io.github.loshine.svg.example.ComposeApp"
         }
     }
 

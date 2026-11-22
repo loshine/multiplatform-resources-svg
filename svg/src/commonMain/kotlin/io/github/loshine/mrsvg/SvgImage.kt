@@ -14,7 +14,7 @@ import org.jetbrains.compose.resources.DrawableResource
  * [org.jetbrains.compose.resources.DrawableResource].
  *
  * This function is a wrapper around the [androidx.compose.foundation.Image] composable that
- * automatically creates an SVG painter using [mrsvg.rememberSvgPainter]. It simplifies the process
+ * automatically creates an SVG painter using [rememberSvgPainter]. It simplifies the process
  * of displaying SVG resources across different platforms.
  *
  * @param resource The [org.jetbrains.compose.resources.DrawableResource] to be displayed.
