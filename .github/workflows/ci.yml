@@ -42,8 +42,10 @@ jobs:
       - name: Build and test Android, JVM, JS, and Wasm targets
         run: |
           ./gradlew \
+            ktfmtCheck \
             :svg:assemble \
             :svg:jvmTest \
+            :svg:testAndroidHostTest \
             :svg:compileKotlinJs \
             :svg:compileKotlinWasmJs \
             :androidApp:assembleDebug \

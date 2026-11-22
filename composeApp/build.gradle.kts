@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.composeHotReload)
+    alias(libs.plugins.ktfmt)
 }
 
 kotlin {
@@ -18,21 +19,20 @@ kotlin {
         androidResources.enable = true
         withHostTest {}
 
-        compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_11)
-        }
+        compilerOptions { jvmTarget.set(JvmTarget.JVM_11) }
     }
 
     listOf(
-        iosArm64(),
-        iosSimulatorArm64()
-    ).forEach { iosTarget ->
-        iosTarget.binaries.framework {
-            baseName = "ComposeApp"
-            isStatic = true
-            freeCompilerArgs += "-Xbinary=bundleId=io.github.loshine.svg.example.ComposeApp"
+            iosArm64(),
+            iosSimulatorArm64(),
+        )
+        .forEach { iosTarget ->
+            iosTarget.binaries.framework {
+                baseName = "ComposeApp"
+                isStatic = true
+                freeCompilerArgs += "-Xbinary=bundleId=io.github.loshine.svg.example.ComposeApp"
+            }
         }
-    }
 
     jvm()
 
@@ -48,9 +48,7 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
         }
-        commonTest.dependencies {
-            implementation(libs.kotlin.test)
-        }
+        commonTest.dependencies { implementation(libs.kotlin.test) }
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutinesSwing)
@@ -69,3 +67,5 @@ compose.desktop {
         }
     }
 }
+
+ktfmt { kotlinLangStyle() }

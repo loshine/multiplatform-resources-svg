@@ -18,4 +18,4 @@ import org.jetbrains.compose.resources.DrawableResource
  * @see androidx.compose.ui.graphics.painter.Painter
  * @see org.jetbrains.compose.resources.DrawableResource
  */
-@Composable expect fun rememberSvgPainter(resource: DrawableResource): Painter
+@Composable public expect fun rememberSvgPainter(resource: DrawableResource): Painter

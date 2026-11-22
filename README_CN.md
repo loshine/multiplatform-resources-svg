@@ -2,7 +2,6 @@
 
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.loshine/multiplatform-resources-svg.svg)](https://central.sonatype.com/artifact/io.github.loshine/multiplatform-resources-svg)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)
-[![Kotlin](https://img.shields.io/badge/kotlin-2.4.21-blue.svg?logo=kotlin)](http://kotlinlang.org)
 [![Kotlin Multiplatform](https://img.shields.io/badge/Kotlin-Multiplatform-blueviolet?logo=kotlin)](https://kotlinlang.org/docs/multiplatform.html)
 
 [English](./README.md)
@@ -11,7 +10,7 @@
 
 ## 特性
 
-- **Android**: 利用 [AndroidSVG](https://bigbadaboom.github.io/androidsvg/) 库实现强大的 SVG 渲染，并内置异步缓存以提升性能。
+- **Android**: 基于 [AndroidSVG](https://bigbadaboom.github.io/androidsvg/) 实现与 Compose Multiplatform Skiko `SvgPainter` 对齐的按需光栅化 `Painter`，内置有界 LRU 文档缓存并支持 Android Studio Preview。
 - **其他平台 (iOS, JVM, JS, Wasm)**: 使用标准的 [Compose Multiplatform](https://www.jetbrains.com/lp/compose-multiplatform/) `painterResource`，实现无缝集成。
 - **统一 API**: 提供简单的 `rememberSvgPainter` Composable 函数，适用于所有支持的目标平台。
 
@@ -81,6 +80,12 @@ fun MyIcon() {
 - **JVM (Desktop)**
 - **JS**
 - **Wasm (JS)**
+
+## 使用说明与限制
+
+- **简单图标建议**：对于简单的单色或扁平 UI 图标，建议优先转为 Android Vector Drawable（`.xml`）并直接使用 Compose Multiplatform 内置的 `painterResource`，可在全平台原生以 `ImageVector` 渲染且零额外依赖。
+- **跨平台渲染引擎差异**：Android 端使用 **AndroidSVG 1.4**（支持 SVG 1.1 子集，**不支持 `<filter>` 滤镜**），其他平台使用 **Skia**（`SVGDOM`）。Android 端按 SVG 1.1 规范保留 SVG 自身声明或默认的 `preserveAspectRatio`（`xMidYMid meet`），而 Skia `SvgPainter` 会强制拉伸为 `none`；部分 SVG 2 特性或细微 CSS/文字排版在 Android 与 Skia 间也可能存在差异。
+- **Android 缓存尺寸上限**：为防止超大绘制尺寸引发 OOM 或超出 GPU 纹理上限，Android 端每个 `Painter` 实例的 ARGB_8888 后备位图限制单边最大 4096 px 且总像素不超过约 16 MiB，超出时保持逻辑坐标系并按比例缩放离屏画布降采样（多个同时存在的 `Painter` 及重分配峰值仍会累加）。
 
 ## 致谢
 

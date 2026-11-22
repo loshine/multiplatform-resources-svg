@@ -2,6 +2,7 @@ package io.github.loshine.mrsvg
 
 import androidx.compose.foundation.Image
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.NonRestartableComposable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
@@ -14,8 +15,8 @@ import org.jetbrains.compose.resources.DrawableResource
  * [org.jetbrains.compose.resources.DrawableResource].
  *
  * This function is a wrapper around the [androidx.compose.foundation.Image] composable that
- * automatically creates an SVG painter using [rememberSvgPainter]. It simplifies the process
- * of displaying SVG resources across different platforms.
+ * automatically creates an SVG painter using [rememberSvgPainter]. It simplifies the process of
+ * displaying SVG resources across different platforms.
  *
  * @param resource The [org.jetbrains.compose.resources.DrawableResource] to be displayed.
  * @param contentDescription Text used by accessibility services to describe what this image
@@ -34,7 +35,8 @@ import org.jetbrains.compose.resources.DrawableResource
  *   [org.jetbrains.compose.resources.DrawableResource] when it is rendered onscreen.
  */
 @Composable
-fun SvgImage(
+@NonRestartableComposable
+public fun SvgImage(
     resource: DrawableResource,
     contentDescription: String?,
     modifier: Modifier = Modifier.Companion,

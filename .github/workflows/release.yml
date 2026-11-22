@@ -136,6 +136,7 @@ jobs:
           ./gradlew \
             :svg:assemble \
             :svg:jvmTest \
+            :svg:testAndroidHostTest \
             :svg:compileKotlinJs \
             :svg:compileKotlinWasmJs \
             :svg:compileKotlinIosArm64 \

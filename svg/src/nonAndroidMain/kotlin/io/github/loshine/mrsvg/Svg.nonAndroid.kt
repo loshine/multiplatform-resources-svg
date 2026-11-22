@@ -16,4 +16,5 @@ import org.jetbrains.compose.resources.painterResource
  * @return A [Painter] that renders the SVG content
  */
 @Composable
-actual fun rememberSvgPainter(resource: DrawableResource): Painter = painterResource(resource)
+public actual fun rememberSvgPainter(resource: DrawableResource): Painter =
+    painterResource(resource)
