@@ -2,7 +2,7 @@
 
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.loshine/multiplatform-resources-svg.svg)](https://central.sonatype.com/artifact/io.github.loshine/multiplatform-resources-svg)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)
-[![Kotlin](https://img.shields.io/badge/kotlin-2.3.21-blue.svg?logo=kotlin)](http://kotlinlang.org)
+[![Kotlin](https://img.shields.io/badge/kotlin-2.4.21-blue.svg?logo=kotlin)](http://kotlinlang.org)
 [![Kotlin Multiplatform](https://img.shields.io/badge/Kotlin-Multiplatform-blueviolet?logo=kotlin)](https://kotlinlang.org/docs/multiplatform.html)
 
 [English](./README.md)
@@ -37,7 +37,7 @@ kotlin {
 ```kotlin
 import androidx.compose.foundation.Image
 import androidx.compose.runtime.Composable
-import io.github.loshine.svg.rememberSvgPainter
+import io.github.loshine.mrsvg.rememberSvgPainter
 import kotlinproject.composeapp.generated.resources.Res
 import kotlinproject.composeapp.generated.resources.my_icon
 
@@ -59,7 +59,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import io.github.loshine.svg.SvgImage
+import io.github.loshine.mrsvg.SvgImage
 import kotlinproject.composeapp.generated.resources.Res
 import kotlinproject.composeapp.generated.resources.my_icon
 
